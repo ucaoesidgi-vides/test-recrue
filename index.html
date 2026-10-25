@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Plateforme de candidature et d'évaluation technique à difficulté progressive - Club Dev UCAO-UUT">
+  <title>Candidatures & Évaluation Technologique — Club Dev UCAO-UUT</title>
+  
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              navy: '#0b1120',
+              card: '#131c31',
+              accent: '#3b82f6',
+              cyan: '#06b6d4',
+              emerald: '#10b981',
+              purple: '#8b5cf6',
+              darkBorder: '#1e293b'
+            }
+          },
+          fontFamily: {
+            sans: ['"DM Sans"', 'sans-serif'],
+            heading: ['"Space Grotesk"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0b1120;
+      color: #f1f5f9;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .font-heading {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    em {
+  font-style: normal;
+  color: #d04444;
+    }
+    .fine, footer {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  padding: 15px 5px;
+      line-height: 1.4;
+    }
+    .glass-card {
+      background: rgba(19, 28, 49, 0.85);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .custom-gradient-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #34d399 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0b1120;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1e293b;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3b82f6;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-cyan-500 selection:text-black">
+
+  <!-- TOP NAVIGATION HEADER -->
+  <header class="sticky top-0 z-50 glass-card border-b border-slate-800/80 px-4 py-3 sm:px-8">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center font-heading font-bold text-slate-950 text-xl shadow-lg shadow-cyan-500/20">
+          &lt;/&gt;
+        </div>
+        <div>
+          <span class="font-heading font-bold text-lg text-white tracking-wide block leading-none">Club Dev <span class="text-cyan-400">UCAO-UUT</span></span>
+          <span class="text-xs text-slate-400 font-medium">Recrutement & Test Technique Progressif</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs & Config Button -->
+      <div class="flex items-center gap-2">
+        <button onclick="toggleConfigModal()" class="px-3 py-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-xs font-medium text-slate-300 border border-slate-700 flex items-center gap-1.5 transition-all">
+          ⚙️ <span class="hidden sm:inline">Config Supabase</span>
+        </button>
+        <nav class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-slate-800">
+          <button id="navApplicantTab" onclick="switchView('applicant')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md">
+            📝 Candidature & Quiz
+          </button>
+          <button id="navAdminTab" onclick="switchView('admin')" class="px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center gap-1.5">
+            🔒 Espace Bureau
+          </button>
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <!-- SUPABASE CONFIGURATION MODAL -->
+  <!--<div id="configModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="glass-card max-w-md w-full rounded-2xl p-6 space-y-4 border border-slate-700 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <h3 class="font-heading font-bold text-lg text-white flex items-center gap-2">Bienvenue</h3>
+        <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-white text-lg">✕</button>
+      </div>
+      <p class="text-xs text-slate-400 leading-relaxed">
+        L'application fonctionne en <b>Mode Démo / Local</b> si Supabase n'est pas configuré. Vous pouvez lier votre propre base Supabase ci-dessous :
+      </p>
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">SUPABASE_URL</label>
+          <input type="text" id="cfgUrl" placeholder="https://ekugnnmxnadryhivfosq.supabase.co" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 mb-1">SUPABASE_ANON_KEY</label>
+          <input type="password" id="cfgKey" placeholder="sb_publishable_dAHcsk-tD8aBUjbnO3s2Aw_5nwFdkfe" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500">
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button onclick="saveSupabaseConfig()" class="px-4 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition-all shadow-md">
+          Enregistrer Configuration
+        </button>
+      </div>
+    </div>
+  </div> -->
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-5xl w-full mx-auto px-4 py-8 flex-grow">
+
+    <!-- ================================================================= -->
+    <!-- VIEW 1: PUBLIC CANDIDATE FORM & PROGRESSIVE QUIZ                  -->
+    <!-- ================================================================= -->
+    <div id="applicantView" class="space-y-8">
+      
+      <!-- HERO BANNER -->
+      <div class="text-center space-y-4 py-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-800/50 text-cyan-300 text-xs font-semibold uppercase tracking-wider">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span> Test d'évaluation technique progressif
+        </div>
+        <h1 class="text-3xl sm:text-5xl font-heading font-extrabold tracking-tight text-white">
+          Rejoins le Club Dev & <span class="custom-gradient-text">Mesure ton Niveau</span>
+        </h1>
+        <p class="text-slate-400 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
+          Sélectionne ton niveau universitaire. Un questionnaire d'évaluation technique sur-mesure s'adaptera automatiquement à ta promotion (de <b>L1 à M2</b>) !
+        </p>
+      </div>
+
+      <!-- LIVE SCORE & MASTERY BAR -->
+      <div class="glass-card rounded-2xl p-4 sm:p-6 border border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-700 flex flex-col items-center justify-center font-heading text-2xl font-bold text-cyan-400 shadow-inner">
+            <div><span id="liveScoreValue">0</span><span class="text-xs text-slate-500">%</span></div>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Niveau de Maîtrise Calculé</div>
+            <div id="liveScoreBadge" class="text-sm font-semibold text-slate-300">Sélectionne ton niveau et réponds aux questions...</div>
+          </div>
+        </div>
+        <div class="w-full sm:w-64 space-y-1">
+          <div class="flex justify-between text-[11px] text-slate-400 font-semibold">
+            <span>Score Technique</span>
+            <span id="liveScoreRatio">0 / 100 PTS</span>
+          </div>
+          <div class="w-full bg-slate-900 rounded-full h-3 overflow-hidden border border-slate-800">
+            <div id="liveProgressBar" class="bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 h-full w-0 transition-all duration-500 rounded-full"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN FORM -->
+      <form id="applicationForm" onsubmit="handleFormSubmit(event)" class="space-y-8">
+
+        <!-- SECTION 1: PERSONAL INFORMATION -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+            <span class="w-8 h-8 rounded-lg bg-blue-600/20 text-blue-400 font-heading font-bold flex items-center justify-center text-sm border border-blue-500/30">01</span>
+            <div>
+              <h2 class="font-heading font-bold text-xl text-white">Informations Personnelles</h2>
+              <p class="text-xs text-slate-400">Identification et parcours académique à l'UCAO-UUT.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Nom <span class="text-red-400">*</span></label>
+              <input type="text" name="last_name" required placeholder="Ex. KOUMONDJI" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Prénom(s) <span class="text-red-400">*</span></label>
+              <input type="text" name="first_name" required placeholder="Ex. Koffi Jean" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Filière d'Études <span class="text-red-400">*</span></label>
+              <input type="text" name="program" required placeholder="Ex. Génie Logiciel, DGI, Science de Données" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all">
+            </div>
+
+            <!-- LEVEL SELECTOR (DYNAMIC TRIGGER) -->
+            <div>
+              <label class="block text-xs font-semibold text-cyan-400 mb-2">Niveau Académique Actuel <span class="text-red-400">*</span></label>
+              <select id="userLevelSelect" name="level" required onchange="onLevelChange()" class="w-full bg-slate-900 border border-cyan-500/60 text-cyan-300 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all">
+                <option value="">-- Choisir ton niveau (L1 à M2) --</option>
+                <option value="Licence 1">Licence 1 (L1) </option>
+                <option value="Licence 2">Licence 2 (L2)</option>
+                <option value="Licence 3">Licence 3 (L3)</option>
+                <option value="Master 1">Master 1 (M1)</option>
+                <option value="Master 2">Master 2 (M2)</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Adresse E-mail <span class="text-red-400">*</span></label>
+              <input type="email" name="email" required placeholder="etudiant@gmail.com" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Numéro WhatsApp <span class="text-red-400">*</span></label>
+              <input type="tel" name="whatsapp" required placeholder="+228 90 00 00 00" class="w-full bg-slate-900/90 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-all">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: ADAPTIVE DYNAMIC QUIZ & EVALUATION -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+            <div class="flex items-center gap-3">
+              <span class="w-8 h-8 rounded-lg bg-cyan-600/20 text-cyan-400 font-heading font-bold flex items-center justify-center text-sm border border-cyan-500/30">02</span>
+              <div>
+                <h2 class="font-heading font-bold text-xl text-white">Évaluation Technique Adaptative</h2>
+                <p class="text-xs text-slate-400">Questions ciblées à difficulté progressive générées pour ton niveau.</p>
+              </div>
+            </div>
+            <span id="levelBadgeDisplay" class="text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+              Sélectionne ton niveau ci-dessus
+            </span>
+          </div>
+
+          <!-- PLACEHOLDER IF NO LEVEL SELECTED -->
+          <div id="noLevelNotice" class="text-center py-12 bg-slate-900/40 rounded-2xl border border-dashed border-slate-800 space-y-2">
+            <div class="text-3xl">🎯</div>
+            <p class="text-slate-300 font-semibold text-sm">Sélectionne ton niveau académique (01)</p>
+            <p class="text-slate-500 text-xs max-w-md mx-auto">Le questionnaire de connaissances techniques correspondant à ton cursus (L1, L2, L3, M1 ou M2) apparaîtra automatiquement ici.</p>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LEVEL 1: LICENCE 1 (L1) QUIZ                              -->
+          <!-- ========================================================= -->
+          <div id="quiz_L1" class="hidden space-y-6">
+            <div class="p-3 rounded-xl bg-blue-950/40 border border-blue-800/40 text-blue-300 text-xs">
+              📘 <b>Niveau Licence 1 (L1) — Débutant :</b> Évaluation de votre logique algorithmique de base, variables et fondamentaux du Web (HTML/CSS).
+            </div>
+
+            <!-- Q1: Algorithmique de base -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                1. Algorithme & Variables : Si <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">x = 5</code>, <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">y = 3</code>, puis on exécute <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">x = x + y</code> suivi de <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">y = x - y</code>, quelle est la valeur finale de <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">y</code> ? <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l1_q1" value="3" onchange="calculateScore()" class="accent-cyan-500"> 3
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l1_q1" value="5" onchange="calculateScore()" class="accent-cyan-500"> 5 
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l1_q1" value="8" onchange="calculateScore()" class="accent-cyan-500"> 8
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l1_q1" value="2" onchange="calculateScore()" class="accent-cyan-500"> 2
+                </label>
+              </div>
+            </div>
+
+            <!-- Q2: Conditions SI / SINON -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                2. Structure Conditionnelle : Que fera un bloc <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">SI (age >= 18) ALORS ... SINON ...</code> si <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">age = 18</code> ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l1_q2" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Sélectionner la bonne réponse --</option>
+                <option value="25">Exécutera le bloc ALORS (vrai)</option>
+                <option value="0">Exécutera le bloc SINON (faux)</option>
+                <option value="0">Provoquera une erreur de syntaxe</option>
+              </select>
+            </div>
+
+            <!-- Q3: Concepts HTML / CSS -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                3. Concepts du Web : Dans une page web simple, quel est le rôle principal du langage HTML ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l1_q3" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir le rôle principal --</option>
+                <option value="25">Définir la structure et le contenu sémantique du document</option>
+                <option value="0">Dynamiser les calculs et gérer les bases de données</option>
+                <option value="0">Gérer uniquement la couleur et le style visuel des éléments</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LEVEL 2: LICENCE 2 (L2) QUIZ                              -->
+          <!-- ========================================================= -->
+          <div id="quiz_L2" class="hidden space-y-6">
+            <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-800/40 text-cyan-300 text-xs">
+              📗 <b>Niveau Licence 2 (L2) — Intermédiaire Débutant :</b> Évaluation sur les boucles, la manipulation du DOM/JS, les tableaux et les requêtes SQL fondamentales.
+            </div>
+
+            <!-- Q1: Boucles & Itérations -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                1. Boucles : Combien de fois la boucle <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">for(let i=0; i&lt;5; i++)</code> s'exécutera-t-elle ? <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l2_q1" value="4" onchange="calculateScore()" class="accent-cyan-500"> 4 fois
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l2_q1" value="25" onchange="calculateScore()" class="accent-cyan-500"> 5 fois (Exact)
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l2_q1" value="6" onchange="calculateScore()" class="accent-cyan-500"> 6 fois
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l2_q1" value="0" onchange="calculateScore()" class="accent-cyan-500"> Boucle infinie
+                </label>
+              </div>
+            </div>
+
+            <!-- Q2: JavaScript / DOM -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                2. Manipulation du DOM : En JavaScript, quelle méthode sélectionne un élément par son identifiant unique ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l2_q2" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir la méthode --</option>
+                <option value="25">document.getElementById('monId')</option>
+                <option value="0">document.getElementByClass('monId')</option>
+                <option value="0">window.selectId('monId')</option>
+              </select>
+            </div>
+
+            <!-- Q3: Bases de données SQL -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                3. Base de données SQL : Quelle commande SQL permet de récupérer toutes les colonnes de la table <code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">etudiants</code> ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l2_q3" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Sélectionner la requête SQL --</option>
+                <option value="25">SELECT * FROM etudiants;</option>
+                <option value="0">GET ALL FROM etudiants;</option>
+                <option value="0">FETCH etudiants WHERE *;</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LEVEL 3: LICENCE 3 (L3) QUIZ                              -->
+          <!-- ========================================================= -->
+          <div id="quiz_L3" class="hidden space-y-6">
+            <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 text-xs">
+              📙 <b>Niveau Licence 3 (L3) — Intermédiaire :</b> Test sur la Programmation Orientée Objet (POO), les API REST, le JavaScript asynchrone et les jointures SQL.
+            </div>
+
+            <!-- Q1: POO Concepts -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                1. POO (Objet) : Quel principe permet à une classe d'hériter des propriétés et méthodes d'une classe parente ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l3_q1" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir le concept --</option>
+                <option value="25">L'Héritage (Inheritance)</option>
+                <option value="0">L'Encapsulation</option>
+                <option value="0">Le Polymorphisme</option>
+                <option value="0">L'Abstraction basique</option>
+              </select>
+            </div>
+
+            <!-- Q2: API REST & HTTP -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                2. API REST : Quelle méthode HTTP est appropriée pour effectuer une modification partielle d'un enregistrement existant ? <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l3_q2" value="0" onchange="calculateScore()" class="accent-cyan-500"> POST
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l3_q2" value="25" onchange="calculateScore()" class="accent-cyan-500"> PATCH (Correct)
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l3_q2" value="10" onchange="calculateScore()" class="accent-cyan-500"> PUT (Complet)
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="l3_q2" value="0" onchange="calculateScore()" class="accent-cyan-500"> GET
+                </label>
+              </div>
+            </div>
+
+            <!-- Q3: Asynchronisme & SQL Jointures -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                3. Jointures SQL : Dans une base de données, quel type de jointure retourne uniquement les lignes ayant une correspondance exacte dans les deux tables ? <span class="text-red-400">*</span>
+              </label>
+              <select name="l3_q3" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Sélectionner la jointure --</option>
+                <option value="25">INNER JOIN</option>
+                <option value="0">LEFT JOIN</option>
+                <option value="0">FULL OUTER JOIN</option>
+                <option value="0">CROSS JOIN</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LEVEL 4: MASTER 1 (M1) QUIZ                               -->
+          <!-- ========================================================= -->
+          <div id="quiz_M1" class="hidden space-y-6">
+            <div class="p-3 rounded-xl bg-purple-950/40 border border-purple-800/40 text-purple-300 text-xs">
+              🎓 <b>Niveau Master 1 (M1) — Avancé :</b> Évaluation sur les frameworks modernes (React, Node, Spring, Flutter), l'architecture MVC/Clean Code et la gestion Git.
+            </div>
+
+            <!-- Q1: Frameworks & État -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                1. Frameworks Front-End (React/Vue) : Que se passe-t-il lorsque l'état (<code class="text-cyan-300 bg-slate-900 px-1 py-0.5 rounded">state</code>) d'un composant est mis à jour ? <span class="text-red-400">*</span>
+              </label>
+              <select name="m1_q1" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir la réponse --</option>
+                <option value="25">Le composant redéfinit le DOM Virtuel et déclenche un re-rendu ciblé</option>
+                <option value="0">Toute la page du navigateur est rechargée depuis le serveur</option>
+                <option value="0">La base de données backend est mise à jour immédiatement</option>
+              </select>
+            </div>
+
+            <!-- Q2: Architecture & Clean Code -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                2. Architecture Logicielle : Dans le patron MVC (Modèle-Vue-Contrôleur), quel rôle est attribué au Contrôleur ? <span class="text-red-400">*</span>
+              </label>
+              <select name="m1_q2" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir le rôle --</option>
+                <option value="25">Recevoir les requêtes utilisateur, orchestrer la logique métier et renvoyer la réponse</option>
+                <option value="0">Stocker la structure des tables SQL uniquement</option>
+                <option value="0">Afficher uniquement l'interface graphique HTML/CSS</option>
+              </select>
+            </div>
+
+            <!-- Q3: Git & Versioning -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                3. Gestion de Version Git : Quelle commande permet d'intégrer les modifications d'une branche de fonctionnalité dans la branche principale ? <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m1_q3" value="0" onchange="calculateScore()" class="accent-cyan-500"> git commit
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m1_q3" value="25" onchange="calculateScore()" class="accent-cyan-500"> git merge
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m1_q3" value="0" onchange="calculateScore()" class="accent-cyan-500"> git push
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m1_q3" value="0" onchange="calculateScore()" class="accent-cyan-500"> git checkout
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========================================================= -->
+          <!-- LEVEL 5: MASTER 2 (M2) QUIZ                               -->
+          <!-- ========================================================= -->
+          <div id="quiz_M2" class="hidden space-y-6">
+            <div class="p-3 rounded-xl bg-emerald-950/40 border border-emerald-800/40 text-emerald-300 text-xs">
+              🚀 <b>Niveau Master 2 (M2) — Expert :</b> Évaluation haut niveau sur la conteneurisation (Docker), la sécurité web (OWASP, JWT, XSS) et l'intégration continue CI/CD.
+            </div>
+
+            <!-- Q1: Docker & Conteneurisation -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                1. Conteneurisation : Quelle est la différence fondamentale entre une Machine Virtuelle (VM) et un Conteneur Docker ? <span class="text-red-400">*</span>
+              </label>
+              <select name="m2_q1" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir l'explication technique --</option>
+                <option value="25">Le conteneur partage le noyau (kernel) du système hôte, alors que la VM virtualise un OS complet avec Hyperviseur</option>
+                <option value="0">La VM est uniquement dédiée au développement web et Docker à l'administration réseau</option>
+                <option value="0">Les conteneurs Docker ne fonctionnent pas sur les serveurs Linux</option>
+              </select>
+            </div>
+
+            <!-- Q2: Sécurité Web (OWASP & JWT) -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                2. Sécurité Web : Comment se prémunir efficacement contre les attaques par Injection SQL ? <span class="text-red-400">*</span>
+              </label>
+              <select name="m2_q2" onchange="calculateScore()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="0">-- Choisir la bonne pratique --</option>
+                <option value="25">Utiliser systématiquement des requêtes préparées (Prepared Statements / ORM)</option>
+                <option value="0">Chiffrer le mot de passe utilisateur en MD5 avant la requête</option>
+                <option value="0">Désactiver le protocole HTTPS sur le serveur d'API</option>
+              </select>
+            </div>
+
+            <!-- Q3: DevOps & CI/CD -->
+            <div class="space-y-2">
+              <label class="block text-xs font-semibold text-slate-200">
+                3. CI/CD Pipeline : Quel est le rôle principal de l'étape de "Continuous Integration" (CI) ? <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m2_q3" value="25" onchange="calculateScore()" class="accent-cyan-500"> Automatiser la compilation, les tests unitaires et la validation à chaque push
+                </label>
+                <label class="flex items-center gap-2 p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 cursor-pointer text-xs">
+                  <input type="radio" name="m2_q3" value="0" onchange="calculateScore()" class="accent-cyan-500"> Configurer les serveurs physiques dans le centre de données
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMMON STACK & MOTIVATION -->
+          <div class="space-y-4 pt-4 border-t border-slate-800">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Technologies & Langages que tu pratiques couramment :</label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="HTML/CSS/JS" onchange="calculateScore()" class="accent-cyan-500 rounded"> HTML / CSS / JS</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="React/Vue/Angular" onchange="calculateScore()" class="accent-cyan-500 rounded"> React / Vue / Angular</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="Node/Express" onchange="calculateScore()" class="accent-cyan-500 rounded"> Node.js / Express</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="Python/Django" onchange="calculateScore()" class="accent-cyan-500 rounded"> Python / Django</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="PHP/Laravel" onchange="calculateScore()" class="accent-cyan-500 rounded"> PHP / Laravel</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="Java/Spring" onchange="calculateScore()" class="accent-cyan-500 rounded"> Java / Spring Boot</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="SQL/Postgres" onchange="calculateScore()" class="accent-cyan-500 rounded"> SQL / Postgres</label>
+                <label class="flex items-center gap-2 text-slate-300"><input type="checkbox" name="stack" value="Docker/DevOps" onchange="calculateScore()" class="accent-cyan-500 rounded"> Docker / DevOps</label>
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Pourquoi souhaites-tu rejoindre le Club Dev UCAO-UUT ? <span class="text-red-400">*</span></label>
+              <textarea name="motivation" required minlength="20" rows="3" placeholder="Explique ton intérêt pour la programmation, l'entraide et le travail d'équipe au club..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-cyan-500"></textarea>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Lien GitHub / Portfolio / LinkedIn (Optionnel mais recommandé) :</label>
+              <input type="url" name="portfolio_url" oninput="calculateScore()" placeholder="https://github.com/votre-pseudo" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 3: AVAILABILITY & COMMITMENT -->
+        <div class="glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+          <div class="flex items-center gap-3 border-b border-slate-800 pb-4">
+            <span class="w-8 h-8 rounded-lg bg-emerald-600/20 text-emerald-400 font-heading font-bold flex items-center justify-center text-sm border border-emerald-500/30">03</span>
+            <div>
+              <h2 class="font-heading font-bold text-xl text-white">Disponibilité & Engagement</h2>
+              <p class="text-xs text-slate-400">Pour organiser les ateliers, hackathons et projets de groupe.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Temps consacré par semaine <span class="text-red-400">*</span></label>
+              <select name="hours" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="1 à 2 heures">1 à 2 heures / semaine</option>
+                <option value="3 à 5 heures" selected>3 à 5 heures / semaine</option>
+                <option value="6 heures ou plus">6 heures ou plus / semaine</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-2">Créneaux préférentiels <span class="text-red-400">*</span></label>
+              <select name="availability" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500">
+                <option value="En semaine après les cours">En semaine (après les cours)</option>
+                <option value="Le week-end">Le week-end</option>
+                <option value="En semaine et week-end">En semaine & week-end</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="space-y-3 pt-2">
+            <label class="flex items-start gap-3 cursor-pointer text-xs text-slate-300">
+              <input type="checkbox" name="rules_accepted" required class="mt-0.5 accent-cyan-500 rounded">
+              <span>Je m'engage à participer activement aux réunions et ateliers du Club Dev UCAO-UUT. <span class="text-red-400">*</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- SUBMISSION MESSAGE & BUTTON -->
+        <div id="formMessage" class="hidden p-4 rounded-xl text-sm font-medium text-center"></div>
+
+        <button type="submit" id="submitBtn" class="w-full py-4 px-6 rounded-xl bg-gradient-to-r from-blue-600 via-cyan-600 to-emerald-600 hover:from-blue-500 hover:to-emerald-500 text-white font-heading font-bold text-base shadow-lg shadow-cyan-500/20 hover:shadow-cyan-500/40 transition-all duration-300 flex items-center justify-center gap-2">
+          <span>Soumettre ma Candidature & mon Test</span>
+          <span class="text-lg">→</span>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- VIEW 2: ADMIN BUREAU DASHBOARD                                    -->
+    <!-- ================================================================= -->
+    <div id="adminView" class="hidden space-y-8">
+      
+      <!-- LOGIN CARD (VISIBLE WHEN NOT LOGGED IN) -->
+      <div id="adminLoginCard" class="max-w-md mx-auto glass-card rounded-2xl p-6 sm:p-8 space-y-6">
+        <div class="text-center space-y-2">
+          <div class="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mx-auto text-2xl border border-blue-500/30">
+            🔒
+          </div>
+          <h2 class="font-heading font-bold text-2xl text-white">Espace Bureau</h2>
+          <p class="text-xs text-slate-400">Connecte-toi avec un compte administrateur du bureau.</p>
+        </div>
+
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">E-mail Administrateur</label>
+            <input type="email" id="adminEmail" required placeholder="admin@ucao.tg" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1">Mot de passe</label>
+            <input type="password" id="adminPassword" required placeholder="••••••••" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+          </div>
+          <button type="submit" class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-sm transition-all shadow-md">
+            Se connecter à l'Espace Bureau
+          </button>
+        </form>
+
+        <div class="text-center pt-2">
+          <button onclick="enableAdminDemoMode()" class="text-xs text-cyan-400 hover:underline">
+            
+          </button>
+        </div>
+
+        <div id="adminLoginMsg" class="hidden p-3 rounded-xl text-xs text-center"></div>
+      </div>
+
+      <!-- DASHBOARD PANEL (VISIBLE WHEN LOGGED IN) -->
+      <div id="adminDashboard" class="hidden space-y-6">
+        
+        <!-- DASHBOARD TOP BAR -->
+        <div class="glass-card rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h2 class="font-heading font-bold text-2xl text-white">Gestion des Candidatures</h2>
+            <p id="applicationsCountText" class="text-xs text-slate-400">Chargement des données...</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="exportApplicationsToCSV()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold transition-all flex items-center gap-1.5">
+              📥 Exporter CSV
+            </button>
+            <button onclick="handleAdminLogout()" class="px-3.5 py-2 rounded-xl bg-red-950/60 hover:bg-red-900/80 text-red-300 border border-red-800/50 text-xs font-semibold transition-all">
+              Déconnexion
+            </button>
+          </div>
+        </div>
+
+        <!-- FILTERS & SEARCH BAR -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <input type="text" id="adminSearchInput" oninput="renderAdminApplications()" placeholder="🔍 Rechercher nom, mail, filière..." class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500">
+          
+          <!-- LEVEL FILTER (L1 to M2) -->
+          <select id="adminLevelFilter" onchange="renderAdminApplications()" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500">
+            <option value="">Tous les niveaux (L1 à M2)</option>
+            <option value="Licence 1">Licence 1 (L1)</option>
+            <option value="Licence 2">Licence 2 (L2)</option>
+            <option value="Licence 3">Licence 3 (L3)</option>
+            <option value="Master 1">Master 1 (M1)</option>
+            <option value="Master 2">Master 2 (M2)</option>
+          </select>
+
+          <!-- SCORE FILTER -->
+          <select id="adminScoreFilter" onchange="renderAdminApplications()" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500">
+            <option value="">Tous les scores</option>
+            <option value="high">Score Élevé (>= 75%)</option>
+            <option value="mid">Score Moyen (50% - 74%)</option>
+            <option value="low">Score Débutant (< 50%)</option>
+          </select>
+
+          <!-- STATUS FILTER -->
+          <select id="adminStatusFilter" onchange="renderAdminApplications()" class="bg-slate-900 border border-slate-700 text-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-cyan-500">
+            <option value="">Tous les statuts</option>
+            <option value="new">Nouvelles</option>
+            <option value="reviewing">À examiner</option>
+            <option value="accepted">Retenue</option>
+            <option value="rejected">Non retenue</option>
+          </select>
+        </div>
+
+        <!-- APPLICATIONS LIST CONTAINER -->
+        <div id="adminApplicationsList" class="space-y-4">
+          <!-- Dynamically populated candidate cards -->
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer >
+   
+      <p>Club de Développement Web & Applications · <b>UCAO-UUT</b></p>
+      <p class="text-slate-600">Développeurs, bâtissons un avenir numérique pour l'UCAO.</p>
+        <p class="text-slate-400">© 2024 Club Dev UCAO-UUT. Tous droits réservés.</p>
+    
+  </footer>
+  <center><p><h2><var>Dev<b><em>Junior</em></b></var></h2></footer></p></center>
+
+  <!-- INLINE LOGIC & STORAGE -->
+  <script>
+
+    let supabaseClient = null;
+    let currentScore = 0;
+    let currentMasteryText = "";
+    let applicationsData = [];
+    let isDemoMode = false;
+   
+
+    // Load saved Supabase keys from localStorage if available
+    window.CLUB_CONFIG = JSON.parse(localStorage.getItem('CLUB_SUPABASE_CFG')) || {
+      SUPABASE_URL: "https://ekugnnmxnadryhivfosq.supabase.co",
+      SUPABASE_ANON_KEY: "sb_publishable_dAHcsk-tD8aBUjbnO3s2Aw_5nwFdkfe"
+    };
+
+    function getSupabase() {
+      if (supabaseClient) return supabaseClient;
+      if (window.CLUB_CONFIG && window.CLUB_CONFIG.SUPABASE_URL && window.CLUB_CONFIG.SUPABASE_ANON_KEY) {
+        try {
+          supabaseClient = window.supabase.createClient(window.CLUB_CONFIG.SUPABASE_URL, window.CLUB_CONFIG.SUPABASE_ANON_KEY);
+        } catch (e) {
+          console.warn("Supabase non disponible, mode local activé.");
+        }
+      }
+      return supabaseClient;
+    }
+
+    function toggleConfigModal() {
+      const modal = document.getElementById('configModal');
+      modal.classList.toggle('hidden');
+      if (!modal.classList.contains('hidden')) {
+        document.getElementById('cfgUrl').value = window.CLUB_CONFIG.SUPABASE_URL || '';
+        document.getElementById('cfgKey').value = window.CLUB_CONFIG.SUPABASE_ANON_KEY || '';
+      }
+    }
+
+    function saveSupabaseConfig() {
+      const url = document.getElementById('cfgUrl').value.trim();
+      const key = document.getElementById('cfgKey').value.trim();
+      window.CLUB_CONFIG = { SUPABASE_URL: url, SUPABASE_ANON_KEY: key };
+      localStorage.setItem('CLUB_SUPABASE_CFG', JSON.stringify(window.CLUB_CONFIG));
+      supabaseClient = null;
+      toggleConfigModal();
+      alert("Configuration enregistrée !");
+    }
+
+    function switchView(view) {
+      const applicantView = document.getElementById('applicantView');
+      const adminView = document.getElementById('adminView');
+      const navApplicantTab = document.getElementById('navApplicantTab');
+      const navAdminTab = document.getElementById('navAdminTab');
+
+      if (view === 'applicant') {
+        applicantView.classList.remove('hidden');
+        adminView.classList.add('hidden');
+        navApplicantTab.className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
+        navAdminTab.className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center gap-1.5";
+      } else {
+        applicantView.classList.add('hidden');
+        adminView.classList.remove('hidden');
+        navAdminTab.className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 bg-blue-600 text-white shadow-md";
+        navApplicantTab.className = "px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-400 hover:text-white transition-all duration-200 flex items-center gap-1.5";
+        checkAdminSession();
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // PROGRESSIVE LEVEL & QUIZ SWITCHER
+    // -----------------------------------------------------------------
+    function onLevelChange() {
+      const selectedLevel = document.getElementById('userLevelSelect').value;
+      const noLevelNotice = document.getElementById('noLevelNotice');
+      const levelBadgeDisplay = document.getElementById('levelBadgeDisplay');
+
+      const quizIDs = ['quiz_L1', 'quiz_L2', 'quiz_L3', 'quiz_M1', 'quiz_M2'];
+      quizIDs.forEach(id => document.getElementById(id).classList.add('hidden'));
+
+      noLevelNotice.classList.add('hidden');
+
+      if (!selectedLevel) {
+        noLevelNotice.classList.remove('hidden');
+        levelBadgeDisplay.textContent = "Sélectionne ton niveau ci-dessus";
+        levelBadgeDisplay.className = "text-xs font-semibold px-3 py-1.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700";
+      } else {
+        let levelKey = selectedLevel.includes('Licence 1') ? 'L1' :
+                       selectedLevel.includes('Licence 2') ? 'L2' :
+                       selectedLevel.includes('Licence 3') ? 'L3' :
+                       selectedLevel.includes('Master 1') ? 'M1' : 'M2';
+
+        document.getElementById(`quiz_${levelKey}`).classList.remove('hidden');
+        levelBadgeDisplay.textContent = `Niveau sélectionné : ${selectedLevel}`;
+        levelBadgeDisplay.className = "text-xs font-semibold px-3 py-1.5 rounded-full bg-cyan-950 text-cyan-300 border border-cyan-800";
+      }
+
+      calculateScore();
+    }
+
+    // -----------------------------------------------------------------
+    // REAL-TIME SCORE CALCULATOR & EVALUATOR
+    // -----------------------------------------------------------------
+    function calculateScore() {
+      const level = document.getElementById('userLevelSelect').value;
+      let quizScore = 0;
+      let bonusScore = 0;
+
+      if (level.includes('Licence 1')) {
+        if (document.querySelector('input[name="l1_q1"]:checked')?.value === "5") quizScore += 25;
+        quizScore += parseInt(document.querySelector('select[name="l1_q2"]')?.value || "0");
+        quizScore += parseInt(document.querySelector('select[name="l1_q3"]')?.value || "0");
+      } else if (level.includes('Licence 2')) {
+        if (document.querySelector('input[name="l2_q1"]:checked')?.value === "25") quizScore += 25;
+        quizScore += parseInt(document.querySelector('select[name="l2_q2"]')?.value || "0");
+        quizScore += parseInt(document.querySelector('select[name="l2_q3"]')?.value || "0");
+      } else if (level.includes('Licence 3')) {
+        quizScore += parseInt(document.querySelector('select[name="l3_q1"]')?.value || "0");
+        if (document.querySelector('input[name="l3_q2"]:checked')?.value) quizScore += parseInt(document.querySelector('input[name="l3_q2"]:checked').value);
+        quizScore += parseInt(document.querySelector('select[name="l3_q3"]')?.value || "0");
+      } else if (level.includes('Master 1')) {
+        quizScore += parseInt(document.querySelector('select[name="m1_q1"]')?.value || "0");
+        quizScore += parseInt(document.querySelector('select[name="m1_q2"]')?.value || "0");
+        if (document.querySelector('input[name="m1_q3"]:checked')?.value === "25") quizScore += 25;
+      } else if (level.includes('Master 2')) {
+        quizScore += parseInt(document.querySelector('select[name="m2_q1"]')?.value || "0");
+        quizScore += parseInt(document.querySelector('select[name="m2_q2"]')?.value || "0");
+        if (document.querySelector('input[name="m2_q3"]:checked')?.value === "25") quizScore += 25;
+      }
+
+      // Stack & portfolio bonuses
+      const stackChecked = document.querySelectorAll('input[name="stack"]:checked').length;
+      bonusScore += Math.min(20, stackChecked * 5);
+
+      const portfolioVal = document.querySelector('input[name="portfolio_url"]')?.value.trim();
+      if (portfolioVal && portfolioVal.length > 10) bonusScore += 5;
+
+      currentScore = Math.min(100, quizScore + bonusScore);
+
+      document.getElementById('liveScoreValue').textContent = currentScore;
+      document.getElementById('liveScoreRatio').textContent = `${currentScore} / 100 PTS`;
+      document.getElementById('liveProgressBar').style.width = currentScore + "%";
+
+      const badge = document.getElementById('liveScoreBadge');
+      if (currentScore < 40) {
+        currentMasteryText = "Niveau : Débutant En Apprentissage 🌱";
+        badge.textContent = currentMasteryText;
+        badge.className = "text-xs font-semibold text-amber-400";
+      } else if (currentScore < 75) {
+        currentMasteryText = "Niveau : Intermédiaire Prometteur ⚡";
+        badge.textContent = currentMasteryText;
+        badge.className = "text-xs font-semibold text-cyan-400";
+      } else {
+        currentMasteryText = "Niveau : Expert / Lead Tech 🚀";
+        badge.textContent = currentMasteryText;
+        badge.className = "text-xs font-semibold text-emerald-400";
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // FORM SUBMISSION
+    // -----------------------------------------------------------------
+    async function handleFormSubmit(event) {
+      event.preventDefault();
+      const form = event.target;
+      const messageDiv = document.getElementById('formMessage');
+      const submitBtn = document.getElementById('submitBtn');
+
+      messageDiv.className = "hidden p-4 rounded-xl text-sm font-medium text-center";
+      const formData = new FormData(form);
+
+      const stackSelected = Array.from(document.querySelectorAll('input[name="stack"]:checked')).map(el => el.value);
+
+      const payload = {
+        id: "cand-" + Date.now(),
+        last_name: formData.get('last_name').trim(),
+        first_name: formData.get('first_name').trim(),
+        program: formData.get('program').trim(),
+        level: formData.get('level'),
+        email: formData.get('email').trim().toLowerCase(),
+        whatsapp: formData.get('whatsapp').trim(),
+        score: currentScore,
+        mastery_badge: currentMasteryText,
+        motivation: formData.get('motivation').trim(),
+        stack: stackSelected,
+        portfolio_url: formData.get('portfolio_url')?.trim() || "",
+        hours: formData.get('hours'),
+        availability: formData.get('availability'),
+        status: 'new',
+        created_at: new Date().toISOString()
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Transmission en cours...";
+
+      try {
+        const client = getSupabase();
+        let isSavedRemote = false;
+
+        if (client) {
+          const { error } = await client.from('club_applications').insert([payload]);
+          if (!error) isSavedRemote = true;
+        }
+
+        demoApplications.unshift(payload);
+
+        messageDiv.textContent = `🎉 Candidature enregistrée avec succès ! Score technique obtenu : ${currentScore}% (${currentMasteryText}). ${isSavedRemote ? 'Données synchronisées avec Supabase.' : 'Mode démo actif.'}`;
+        messageDiv.className = "block p-4 rounded-xl text-sm font-medium text-center bg-emerald-950/80 text-emerald-300 border border-emerald-800";
+        form.reset();
+        document.getElementById('userLevelSelect').value = "";
+        onLevelChange();
+      } catch (err) {
+        console.error(err);
+        messageDiv.textContent = "Erreur lors de la soumission.";
+        messageDiv.className = "block p-4 rounded-xl text-sm font-medium text-center bg-red-950/80 text-red-300 border border-red-800";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>Soumettre ma Candidature & mon Test</span> <span class="text-lg">→</span>';
+      }
+    }
+
+    // -----------------------------------------------------------------
+    // ADMIN DASHBOARD & FILTERS
+    // -----------------------------------------------------------------
+    function enableAdminDemoMode() {
+      isDemoMode = true;
+      document.getElementById('adminLoginCard').classList.add('hidden');
+      document.getElementById('adminDashboard').classList.remove('hidden');
+      applicationsData = demoApplications;
+      renderAdminApplications();
+    }
+
+    async function checkAdminSession() {
+      if (isDemoMode) {
+        enableAdminDemoMode();
+        return;
+      }
+
+      const client = getSupabase();
+      if (!client) {
+        enableAdminDemoMode();
+        return;
+      }
+
+      const { data } = await client.auth.getSession();
+      if (data && data.session) {
+        document.getElementById('adminLoginCard').classList.add('hidden');
+        document.getElementById('adminDashboard').classList.remove('hidden');
+        loadAdminApplications();
+      } else {
+        document.getElementById('adminLoginCard').classList.remove('hidden');
+        document.getElementById('adminDashboard').classList.add('hidden');
+      }
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('adminEmail').value;
+      const password = document.getElementById('adminPassword').value;
+      const msgDiv = document.getElementById('adminLoginMsg');
+
+      const client = getSupabase();
+      if (!client) {
+        enableAdminDemoMode();
+        return;
+      }
+
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) {
+        msgDiv.textContent = "Échec d'authentification Supabase. Essayez le mode démo. ou contactez le +228 92 48 58 66 pour obtenir des informations d'accès.";
+        msgDiv.className = "block p-3 rounded-xl text-xs text-center bg-red-950/80 text-red-300 border border-red-800";
+      } else {
+        msgDiv.className = "hidden";
+        checkAdminSession();
+      }
+    }
+
+    function handleAdminLogout() {
+      isDemoMode = false;
+      const client = getSupabase();
+      if (client) client.auth.signOut();
+      checkAdminSession();
+    }
+
+    async function loadAdminApplications() {
+      const client = getSupabase();
+      if (!client) return enableAdminDemoMode();
+
+      const listContainer = document.getElementById('adminApplicationsList');
+      listContainer.innerHTML = '<p class="text-center text-slate-400 py-8">Chargement des données depuis Supabase...</p>';
+
+      const { data, error } = await client.from('club_applications').select('*').order('created_at', { ascending: false });
+
+      if (error) {
+        applicationsData = demoApplications;
+      } else {
+        applicationsData = (data && data.length) ? data : demoApplications;
+      }
+      renderAdminApplications();
+    }
+
+    function renderAdminApplications() {
+      const search = document.getElementById('adminSearchInput').value.toLowerCase().trim();
+      const levelFilter = document.getElementById('adminLevelFilter').value;
+      const scoreFilter = document.getElementById('adminScoreFilter').value;
+      const statusFilter = document.getElementById('adminStatusFilter').value;
+      const listContainer = document.getElementById('adminApplicationsList');
+
+      const filtered = applicationsData.filter(app => {
+        const textMatch = [app.first_name, app.last_name, app.email, app.program, app.motivation].join(' ').toLowerCase().includes(search);
+        const levelMatch = !levelFilter || app.level === levelFilter;
+        const statusMatch = !statusFilter || app.status === statusFilter;
+
+        let scoreMatch = true;
+        const s = app.score || 0;
+        if (scoreFilter === 'high') scoreMatch = s >= 75;
+        else if (scoreFilter === 'mid') scoreMatch = s >= 50 && s < 75;
+        else if (scoreFilter === 'low') scoreMatch = s < 50;
+
+        return textMatch && levelMatch && statusMatch && scoreMatch;
+      });
+
+      document.getElementById('applicationsCountText').textContent = `${filtered.length} candidature(s) affichée(s) sur ${applicationsData.length} au total.`;
+
+      if (!filtered.length) {
+        listContainer.innerHTML = '<div class="text-center py-12 glass-card rounded-2xl text-slate-400 text-sm">Aucune candidature ne correspond aux critères sélectionnés.</div>';
+        return;
+      }
+
+      const statusBadges = {
+        new: '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-950 text-blue-300 border border-blue-800">Nouvelle</span>',
+        reviewing: '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-300 border border-amber-800">À examiner</span>',
+        accepted: '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-300 border border-emerald-800">Retenue</span>',
+        rejected: '<span class="px-2.5 py-1 rounded-full text-xs font-semibold bg-red-950 text-red-300 border border-red-800">Non retenue</span>'
+      };
+
+      listContainer.innerHTML = filtered.map(app => `
+        <div class="glass-card rounded-2xl p-6 space-y-4 border border-slate-800 hover:border-slate-700 transition-all">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <h3 class="font-heading font-bold text-lg text-white">${safeHTML(app.first_name)} ${safeHTML(app.last_name)}</h3>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">${safeHTML(app.level)}</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded bg-blue-950 text-cyan-400 border border-blue-800">Score: ${app.score || 0}%</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">${safeHTML(app.program)} · ${safeHTML(app.email)} · ${safeHTML(app.whatsapp || 'Pas de WhatsApp')}</p>
+            </div>
+            <div>${statusBadges[app.status] || app.status}</div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs text-slate-300">
+            <div class="space-y-1">
+              <span class="text-slate-500 font-semibold uppercase block text-[10px]">Motivation :</span>
+              <p class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 leading-relaxed">${safeHTML(app.motivation)}</p>
+            </div>
+            <div class="space-y-1">
+              <span class="text-slate-500 font-semibold uppercase block text-[10px]">Technologies & Portfolio :</span>
+              <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 space-y-2">
+                <p><b>Stack :</b> ${(app.stack && app.stack.length) ? app.stack.join(', ') : 'Non précisé'}</p>
+                <p><b>Lien :</b> ${app.portfolio_url ? `<a href="${safeHTML(app.portfolio_url)}" target="_blank" class="text-cyan-400 underline">Voir Portfolio / GitHub</a>` : 'Aucun lien fourni'}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            <span class="text-[11px] text-slate-500">Soumis le ${new Date(app.created_at).toLocaleString('fr-FR')}</span>
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-400 font-medium">Changer Statut :</label>
+              <select onchange="updateCandidateStatus('${app.id}', this.value)" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-500">
+                <option value="new" ${app.status === 'new' ? 'selected' : ''}>Nouvelle</option>
+                <option value="reviewing" ${app.status === 'reviewing' ? 'selected' : ''}>À examiner</option>
+                <option value="accepted" ${app.status === 'accepted' ? 'selected' : ''}>Retenue</option>
+                <option value="rejected" ${app.status === 'rejected' ? 'selected' : ''}>Non retenue</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function updateCandidateStatus(id, newStatus) {
+      const item = applicationsData.find(a => a.id === id);
+      if (item) item.status = newStatus;
+
+      const client = getSupabase();
+      if (client && !isDemoMode) {
+        await client.from('club_applications').update({ status: newStatus }).eq('id', id);
+      }
+      renderAdminApplications();
+    }
+
+    function exportApplicationsToCSV() {
+      if (!applicationsData.length) return alert("Aucune donnée à exporter.");
+
+      const headers = ["ID", "Nom", "Prenom", "Niveau", "Filiere", "Email", "WhatsApp", "Score", "Statut", "Date"];
+      const rows = applicationsData.map(a => [
+        a.id,
+        `"${a.last_name}"`,
+        `"${a.first_name}"`,
+        `"${a.level}"`,
+        `"${a.program}"`,
+        `"${a.email}"`,
+        `"${a.whatsapp || ''}"`,
+        `"${a.score || 0}%"`,
+        `"${a.status}"`,
+        `"${a.created_at}"`
+      ]);
+
+      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `candidatures_club_dev_${new Date().toISOString().slice(0,10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function safeHTML(str) {
+      return String(str || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+  </script>
+</body>
+</html>
